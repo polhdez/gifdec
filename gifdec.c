@@ -333,19 +333,20 @@ static int
 read_image_data(gd_GIF *gif, int interlace)
 {
     uint8_t sub_len, shift, byte;
-    int init_key_size, key_size, table_is_full;
-    int frm_off, frm_size, str_len, i, p, x, y;
+    int init_key_size, key_size;
+    int frm_off, frm_size, i, p, x, y;
+    int str_len = 0, table_is_full = 0;
     uint16_t key, clear, stop;
-    int ret;
+    int ret = 0;
     Table *table;
-    Entry entry;
-    off_t start, end;
+    Entry entry = {0, 0, 0};
+    off_t start, end = 0;
 
     read(gif->fd, &byte, 1);
     key_size = (int) byte;
     if (key_size < 2 || key_size > 8)
         return -1;
-    
+
     start = lseek(gif->fd, 0, SEEK_CUR);
     discard_sub_blocks(gif);
     end = lseek(gif->fd, 0, SEEK_CUR);
@@ -416,16 +417,16 @@ read_image(gd_GIF *gif)
     /* Image Descriptor. */
     gif->fx = read_num(gif->fd);
     gif->fy = read_num(gif->fd);
-    
+
     if (gif->fx >= gif->width || gif->fy >= gif->height)
         return -1;
-    
+
     gif->fw = read_num(gif->fd);
     gif->fh = read_num(gif->fd);
-    
+
     gif->fw = MIN(gif->fw, gif->width - gif->fx);
     gif->fh = MIN(gif->fh, gif->height - gif->fy);
-    
+
     read(gif->fd, &fisrz, 1);
     interlace = fisrz & 0x40;
     /* Ignore Sort Flag. */
@@ -525,6 +526,6 @@ void
 gd_close_gif(gd_GIF *gif)
 {
     close(gif->fd);
-    free(gif->frame);    
+    free(gif->frame);
     free(gif);
 }
